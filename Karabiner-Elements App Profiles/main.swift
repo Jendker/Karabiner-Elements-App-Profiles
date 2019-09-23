@@ -12,22 +12,52 @@ import Dispatch
 class FileMonitor {
     var action: (() -> Void)?
     var source: DispatchSourceFileSystemObject
+    var dirSource: DispatchSourceFileSystemObject
     var monitoredFileDescriptor: Int32 = -1
+    var dirFD: Int32 = -1
     var enabled: Bool = false
     
     init(path: String) {
         monitoredFileDescriptor = open(path, O_EVTONLY)
-        source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: monitoredFileDescriptor,
-                                                           eventMask: [.write],
-                                                           queue: DispatchQueue.global())
+        source = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: monitoredFileDescriptor,
+            eventMask: [.write],
+            //queue: DispatchQueue(label: "karabiner-app-profiles")
+            //queue: DispatchQueue.global()
+            queue: DispatchQueue.main
+        )
+        let dirPath = URL(string: path)?.deletingLastPathComponent().relativeString
+        dirFD = open(dirPath!, O_EVTONLY)
+        dirSource = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: dirFD,
+            eventMask: [.write,.delete],
+            queue: DispatchQueue.main
+        )
+        
         source.setEventHandler {
+            print("Config file changed")
             if self.enabled, let action = self.action {
                 action()
             }
-            self.source.activate()
         }
+        
+        source.setCancelHandler {
+            close(self.monitoredFileDescriptor)
+        }
+        
+        dirSource.setEventHandler {
+            print("Config dir changed")
+            if self.enabled, let action = self.action {
+                action()
+            }
+        }
+        dirSource.setCancelHandler {
+            close(self.dirFD)
+        }
+        
+        source.resume()
+        dirSource.resume()
         enabled = true
-        source.activate()
     }
     
     func suspend(for block: () -> Void) {
@@ -130,6 +160,7 @@ class KarabinerConfiguration {
             throw IOError.WriteError
         }
         outputStream.close()
+        print("Write done")
     }
     
     func selectProfileOrDefault(named nameToSelect: String) {
@@ -140,7 +171,7 @@ class KarabinerConfiguration {
         if indexToSelect == selectedProfileIndex {
             return
         }
-        fileMonitor.suspend {
+        //fileMonitor.suspend {
             for index in profiles.indices {
                 let selected = (indexToSelect == index)
                 profiles[index]["selected"] = selected
@@ -157,19 +188,19 @@ class KarabinerConfiguration {
             selectedProfileIndex = indexToSelect
             selectedProfileName = (indexToSelect == 0 ? defaultProfileName : nameToSelect)
             print("Profile is now \(selectedProfileName!)")
-        }
+        //}
     }
 }
 
 class FrontApplicationWatcher {
     init(onSwitchTo: @escaping (String) -> Void) {
-        NSWorkspace.shared().notificationCenter.addObserver(forName: NSNotification.Name.NSWorkspaceDidActivateApplication,
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification,
                                                             object: nil,
                                                             queue: OperationQueue.main)
         { (notification) in
             guard
                 let userInfo = notification.userInfo as? [String: Any],
-                let application = userInfo[NSWorkspaceApplicationKey] as? NSRunningApplication,
+                let application = userInfo[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
                 let bundleIdentifier = application.bundleIdentifier
             else {
                 NSLog("Invalid NSWorkspaceDidActivateApplication userInfo")
