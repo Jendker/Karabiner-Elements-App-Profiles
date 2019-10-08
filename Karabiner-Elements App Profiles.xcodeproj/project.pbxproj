@@ -95,17 +95,18 @@
 					E177E5AA1E491CB50024F193 = {
 						CreatedOnToolsVersion = 8.2.1;
 						DevelopmentTeam = CYEL96ZVC2;
-						LastSwiftMigration = 1010;
+						LastSwiftMigration = 1110;
 						ProvisioningStyle = Automatic;
 					};
 				};
 			};
 			buildConfigurationList = E177E5A61E491CB50024F193 /* Build configuration list for PBXProject "Karabiner-Elements App Profiles" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = E177E5A21E491CB50024F193;
 			productRefGroup = E177E5AC1E491CB50024F193 /* Products */;
@@ -240,7 +241,7 @@
 				DEVELOPMENT_TEAM = CYEL96ZVC2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -250,7 +251,7 @@
 				DEVELOPMENT_TEAM = CYEL96ZVC2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};

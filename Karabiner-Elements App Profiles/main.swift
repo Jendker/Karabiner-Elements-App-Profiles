@@ -109,7 +109,7 @@ class KarabinerConfiguration {
             throw IOError.ReadError(message: "Unable to read from Karabiner-Elements preferences file: \(KarabinerConfiguration.jsonPath)")
         }
         inputStream.open()
-        guard let jsonOpt = try? JSONSerialization.jsonObject(with: inputStream, options: []) as? [String: Any] else {
+        guard let jsonOpt = ((try? JSONSerialization.jsonObject(with: inputStream, options: []) as? [String: Any]) as [String : Any]??) else {
             throw IOError.ReadError(message: "Karabiner-Elements preferences format is unrecognized.")
         }
         inputStream.close()
